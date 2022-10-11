@@ -57,7 +57,6 @@ func main() {
 			fmt.Println("Skipping...")
 			continue
 		}
-		toBeDeleted := false
 		podsClient := clientset.CoreV1().Pods(currNs)
 
 		podsList, err := podsClient.List(context.TODO(), metav1.ListOptions{})
@@ -65,37 +64,34 @@ func main() {
 			panic(err)
 		}
 		podsNumber := len(podsList.Items)
-		if podsNumber == 0 {
-			fmt.Println("No pods in this namespace. Should be deleted")
-			toBeDeleted = true
-		} else {
-			fmt.Printf("This namespace has %d pods \n", podsNumber)
-		}
-
+                
+                if podsNumber != 0 {
+                    fmt.Println("Skipping...")
+                    continue
+                }
+	
 		svcClient := clientset.CoreV1().Services(currNs)
 
 		svcList, err := svcClient.List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			panic(err)
 		}
-		svcNumber := len(svcList.Items)
-		if svcNumber == 0 {
-			fmt.Println("No services in this namespace. Should be deleted")
-			toBeDeleted = true
-		} else {
-			fmt.Printf("This namespace has %d services \n", svcNumber)
-		}
+		
+                svcNumber := len(svcList.Items)
+		if svcNumber != 0 {
+                    fmt.Println("Skipping...")
+                    continue
+                }
 
-		if toBeDeleted {
-			fmt.Println(currNs, " will be deleted..")
-			deletePolicy := metav1.DeletePropagationForeground
-			if err := nsClient.Delete(context.TODO(), currNs, metav1.DeleteOptions{
-				PropagationPolicy: &deletePolicy,
-			}); err != nil {
-				panic(err)
-			}
-			fmt.Println(currNs, " has beed deleted successfully")
-		}
+                fmt.Println(currNs, " namespace will be deleted...")
+
+                deletePolicy := metav1.DeletePropagationForeground
+                if err := nsClient.Delete(context.TODO(), currNs, metav1.DeleteOptions{
+                        PropagationPolicy: &deletePolicy,
+                }); err != nil {
+                        panic(err)
+                }
+                fmt.Println(currNs, " namespace has beed deleted successfully")
 	}
 
 }
